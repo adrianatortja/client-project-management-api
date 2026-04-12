@@ -20,6 +20,7 @@ class Project(models.Model):
     def __str__(self):
         return self.title
     
+
 class Task(models.Model):
     project = models.ForeignKey(
         Project,
@@ -27,7 +28,11 @@ class Task(models.Model):
         related_name='tasks'
     )
     title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
+    
     

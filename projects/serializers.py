@@ -6,12 +6,14 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ['id', 'title', 'description', 'status', 'created_at']
+        read_only_fields = ['id', 'created_at']
 
 
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ['id', 'project', 'title']
+        fields = ['id', 'project', 'title', 'description', 'completed', 'created_at']
+        read_only_fields = ['id', 'created_at']
 
     def validate_project(self, value):
         request = self.context.get('request')
@@ -20,6 +22,3 @@ class TaskSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("You can only add tasks to your own projects.")
 
         return value
-    
-        
-        
