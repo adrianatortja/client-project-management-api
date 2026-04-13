@@ -1,156 +1,100 @@
-Client Project Management API
+# Client Project Management API
 
-A production-style backend API built with Django and Django REST Framework for managing client projects and tasks, featuring JWT authentication and strict data ownership control.
+A Django REST API for managing client projects and tasks with JWT authentication and user-based data ownership.
 
-Overview
+---
 
-This project simulates a real-world backend system where users can:
+## 🚀 Features
 
-create and manage projects
-create and manage tasks within those projects
-securely access only their own data
+- JWT authentication (login, register, refresh)
+- Full Project CRUD
+- Full Task CRUD
+- Ownership validation (users only access their own data)
+- Clean DRF generic views
+- Task responses include `project_title`
+- Tested with Postman
 
-The API is designed with scalability, security, and clean architecture in mind.
+---
 
-Features
-Custom user model
-JWT authentication (register, login, refresh)
-Full Project CRUD (create, list, retrieve, update, delete)
-Full Task CRUD
-Ownership validation (users only access their own data)
-Relational data modeling (projects → tasks)
-Clean API structure using Django REST Framework generics
-Improved API responses (includes project_title)
-Endpoint testing with Postman
-Tech Stack
-Python
-Django
-Django REST Framework
-SimpleJWT
-SQLite
-API Endpoints
-Authentication
+## 🛠 Tech Stack
 
-POST /api/auth/register/
-POST /api/auth/login/
-POST /api/auth/refresh/
+- Python
+- Django
+- Django REST Framework
+- SimpleJWT
+- SQLite
 
-Use the returned access token:
+---
 
+## 🔐 Authentication
+
+- POST /api/auth/register/
+- POST /api/auth/login/
+- POST /api/auth/refresh/
+
+Use token:
+
+```
 Authorization: Bearer <access_token>
+```
 
-Projects
 
-GET /api/projects/
-POST /api/projects/
-GET /api/projects/<id>/
-PATCH /api/projects/<id>/
-DELETE /api/projects/<id>/
+## 📁 Projects API
 
-Tasks
+- GET /api/projects/
+- POST /api/projects/
+- GET /api/projects/<id>/
+- PATCH /api/projects/<id>/
+- DELETE /api/projects/<id>/
 
-GET /api/projects/tasks/
-POST /api/projects/tasks/
-GET /api/projects/tasks/<id>/
-PATCH /api/projects/tasks/<id>/
-DELETE /api/projects/tasks/<id>/
+---
 
-Example Request
+## ✅ Tasks API
 
-Create Task:
+- GET /api/projects/tasks/
+- POST /api/projects/tasks/
+- GET /api/projects/tasks/<id>/
+- PATCH /api/projects/tasks/<id>/
+- DELETE /api/projects/tasks/<id>/
 
+---
+
+## 📌 Example Task
+
+```json
 {
-"project": 1,
-"title": "Build task API",
-"description": "Implement task endpoints with validation"
+  "id": 2,
+  "project": 1,
+  "project_title": "Client Portal",
+  "title": "First task",
+  "completed": true
 }
+```
 
-Example Response
+## 🔒 Permissions
 
-Task Response:
+- Authentication required  
+- Users only access their own data  
 
-{
-"id": 2,
-"project": 1,
-"project_title": "Client Portal",
-"title": "First task",
-"description": "",
-"completed": true,
-"created_at": "2026-04-12T17:59:23.063141Z"
-}
+## ⚙️ Setup
 
-Security & Permissions
-Authentication required for all endpoints
-Users can only access their own projects
-Users can only create tasks within their own projects
-Query filtering prevents cross-user access
-
-Example:
-
-Task.objects.filter(project__user=request.user)
-
-Unauthorized requests return:
-401 Unauthorized
-
-Project Structure
-
-projects/
-├── models.py
-├── serializers.py
-├── views.py
-├── urls.py
-
-Setup Instructions
-
-Clone the repository:
-
+```bash
 git clone https://github.com/adrianatortja/client-project-management-api.git
-
 cd client-project-management-api
-
-Create virtual environment:
 
 python -m venv venv
 venv\Scripts\activate
 
-Install dependencies:
-
 pip install -r requirements.txt
-
-Apply migrations:
-
 python manage.py migrate
-
-Run the server:
-
 python manage.py runserver
+```
 
-Development Workflow
-feature branches
-pull requests
-clean merges into main branch
-incremental API improvements
-Current Status
+## 📊 Status
 
-Completed:
+✔ Complete backend API
+✔ Ready for frontend integration
 
-JWT authentication (login, register, refresh)
-Full Project CRUD
-Full Task CRUD
-Ownership validation across all endpoints
-Clean DRF generic views
-Improved API responses (project_title)
-Full endpoint testing with Postman
-
-This API is fully functional and ready for frontend integration.
-
-Learning Focus
-REST API design
-authentication and authorization
-relational database modeling
-secure multi-user data handling
-real-world backend structure
-Git workflow (branching, PRs, merging)
-Author
+## 👩‍💻 Author
 
 Adriana Tortja
