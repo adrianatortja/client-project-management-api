@@ -10,9 +10,19 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    project_title = serializers.CharField(source='project.title', read_only=True)
+
     class Meta:
         model = Task
-        fields = ['id', 'project', 'title', 'description', 'completed', 'created_at']
+        fields = [
+            'id',
+            'project',
+            'project_title',
+            'title',
+            'description',
+            'completed',
+            'created_at'
+        ]
         read_only_fields = ['id', 'created_at']
 
     def validate_project(self, value):
