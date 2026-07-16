@@ -1,179 +1,46 @@
-# Client Project Management API
+# Client Project Management SaaS
 
-A Django REST API for managing client projects and tasks with JWT authentication, user-based data ownership, filtering, search, ordering, project statistics, and nested task data.
+A multi-tenant Django REST API + React frontend for managing client projects and tasks, with organizations/teams, role-based access, Stripe subscription billing, JWT auth, and Docker deployment.
 
 ---
 
 ## 🚀 Features
 
-- JWT authentication (login, register, refresh)
-- Full Project CRUD
-- Full Task CRUD
-- Ownership validation (users only access their own data)
-- Clean DRF generic views
-- Task responses include `project_title`
-- Project filtering by `status`
-- Project search by `title`
-- Project ordering by `title` and `created_at`
+- JWT authentication (register, login, refresh, `me`)
+- **Organizations & teams** — every project belongs to an organization, not a single user
+- **Roles**: owner / admin / member, enforced via a dedicated permission class
+- Invite existing users into your organization by email
+- Full Project & Task CRUD, scoped to the current organization
+- Project filtering by `status`, search by `title`, ordering by `title`/`created_at`
 - Task filtering by `completed`
-- Project responses include task statistics:
-  - `total_tasks`
-  - `completed_tasks`
-  - `pending_tasks`
-- Project responses include nested task data
-- Automated API tests
-- Tested with Postman
+- Project responses include task stats (`total_tasks`, `completed_tasks`, `pending_tasks`) and nested tasks
+- **Stripe subscription billing** — Free / Pro plans, Checkout, Billing Portal, webhooks
+- Free plan is capped at a configurable number of projects; Pro is unlimited
+- Automated backend test suite (22 tests) using `factory_boy`
+- Simple React (Vite) frontend exercising every feature above
+- Dockerized: Postgres + Django (gunicorn/whitenoise) + React (nginx)
 
 ---
 
 ## 🛠 Tech Stack
 
-- Python
-- Django
-- Django REST Framework
-- SimpleJWT
-- django-filter
-- SQLite
+**Backend:** Python, Django, Django REST Framework, SimpleJWT, django-filter, django-environ, django-cors-headers, Stripe SDK, Postgres (SQLite in local dev by default)
+**Frontend:** React, Vite, react-router, axios
+**Deployment:** Docker, docker-compose, gunicorn, whitenoise, nginx
 
 ---
 
-## 🔐 Authentication
+## 🏢 Multi-tenancy model
 
-### Endpoints
-- `POST /api/auth/register/`
-- `POST /api/auth/login/`
-- `POST /api/auth/refresh/`
-
-### Use token
-
-```text
-Authorization: Bearer <access_token>
-```
+- Every user gets a personal `Organization` automatically on registration (owner role).
+- Users can create additional organizations and invite others (owner/admin only).
+- `Project`s belong to an `Organization`; `Task`s belong to a `Project`.
+- All project/task routes are scoped by organization slug: `/api/orgs/<org_slug>/projects/...`.
+- A non-member gets `403` for any org they don't belong to — including nonexistent slugs, so org existence can't be enumerated.
 
 ---
 
-## 📁 Projects API
-
-- `GET /api/projects/`
-- `POST /api/projects/`
-- `GET /api/projects/<id>/`
-- `PATCH /api/projects/<id>/`
-- `DELETE /api/projects/<id>/`
-
----
-
-## ✅ Tasks API
-
-- `GET /api/projects/tasks/`
-- `POST /api/projects/tasks/`
-- `GET /api/projects/tasks/<id>/`
-- `PATCH /api/projects/tasks/<id>/`
-- `DELETE /api/projects/tasks/<id>/`
-
----
-
-## 🔎 Filtering, Search, and Ordering
-
-### Projects
-
-You can filter, search, and order projects using query parameters.
-
-Examples:
-
-```http
-GET /api/projects/?status=active
-GET /api/projects/?search=client
-GET /api/projects/?ordering=title
-GET /api/projects/?ordering=-created_at
-```
-
-### Tasks
-
-You can filter and order tasks using query parameters.
-
-Examples:
-
-```http
-GET /api/projects/tasks/?completed=true
-GET /api/projects/tasks/?completed=false
-GET /api/projects/tasks/?ordering=-created_at
-```
-
----
-
-## 📌 Example Task Response
-
-```json
-{
-  "id": 2,
-  "project": 1,
-  "project_title": "Client Portal Updated",
-  "title": "First task",
-  "description": "",
-  "completed": true,
-  "created_at": "2026-04-12T17:59:23.063141Z"
-}
-```
-
----
-
-## 📌 Example Project Response
-
-```json
-[
-  {
-    "id": 1,
-    "title": "Client Portal Updated",
-    "description": "Backend for managing client projects",
-    "status": "active",
-    "created_at": "2026-04-10T11:30:39.340348Z",
-    "total_tasks": 3,
-    "completed_tasks": 1,
-    "pending_tasks": 2,
-    "tasks": [
-      {
-        "id": 2,
-        "project": 1,
-        "project_title": "Client Portal Updated",
-        "title": "First task",
-        "description": "",
-        "completed": true,
-        "created_at": "2026-04-12T17:59:23.063141Z"
-      },
-      {
-        "id": 6,
-        "project": 1,
-        "project_title": "Client Portal Updated",
-        "title": "Second task",
-        "description": "",
-        "completed": false,
-        "created_at": "2026-04-12T17:59:23.063141Z"
-      },
-      {
-        "id": 7,
-        "project": 1,
-        "project_title": "Client Portal Updated",
-        "title": "Hack",
-        "description": "",
-        "completed": false,
-        "created_at": "2026-04-12T17:59:23.063141Z"
-      }
-    ]
-  }
-]
-```
-
----
-
-## 🔒 Permissions
-
-- Authentication required
-- Users only access their own data
-- Users cannot create tasks for projects they do not own
-
----
-
-## ⚙️ Setup
+## ⚙️ Backend setup (local, SQLite)
 
 ```bash
 git clone https://github.com/adrianatortja/client-project-management-api.git
@@ -187,32 +54,127 @@ python manage.py migrate
 python manage.py runserver
 ```
 
----
+By default `manage.py`/`wsgi.py`/`asgi.py` use `config.settings.dev` (SQLite, permissive CORS for `localhost:5173`, `DEBUG=True`). Copy `.env.example` to `.env` to override any setting (see below).
 
-## 🧪 Running Tests
+### Environment variables
 
-Run project tests with:
+Copy `.env.example` to `.env` and fill in real values. Key variables:
+
+| Variable | Purpose |
+|---|---|
+| `SECRET_KEY` | Django secret key (required in prod) |
+| `DEBUG` | `True`/`False` |
+| `ALLOWED_HOSTS` | Comma-separated hostnames (prod) |
+| `DATABASE_URL` | e.g. `postgres://user:pass@host:5432/dbname` |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated frontend origins |
+| `FRONTEND_URL` | Used to build Stripe Checkout/Portal redirect URLs |
+| `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_PRICE_ID` | Stripe test-mode keys (see below) |
+
+### Running tests
 
 ```bash
-python manage.py test projects
+python manage.py test
 ```
 
-Current test coverage includes:
-- authenticated project list access
-- project task statistics in API response
-- nested task data in project response
-- ownership filtering so users only see their own projects
+---
+
+## 💳 Stripe setup (test mode)
+
+1. Create a free [Stripe account](https://dashboard.stripe.com/register) and switch to **test mode**.
+2. Create a recurring **Price** for your "Pro" plan (Products → Add product), and copy its Price ID into `STRIPE_PRO_PRICE_ID`.
+3. Copy your test **Secret key** and **Publishable key** from Developers → API keys into `STRIPE_SECRET_KEY` / `STRIPE_PUBLISHABLE_KEY`.
+4. Forward webhooks to your local server with the [Stripe CLI](https://docs.stripe.com/stripe-cli):
+   ```bash
+   stripe listen --forward-to localhost:8000/api/billing/webhook/
+   ```
+   Copy the printed `whsec_...` value into `STRIPE_WEBHOOK_SECRET`.
+5. Use a [Stripe test card](https://docs.stripe.com/testing) (e.g. `4242 4242 4242 4242`) at checkout.
+
+Billing endpoints (all under `/api/orgs/<org_slug>/billing/`, owner/admin only for checkout/portal):
+- `GET  billing/` — current plan, status, project limit
+- `POST billing/checkout/` — create a Stripe Checkout session for the Pro plan
+- `POST billing/portal/` — create a Stripe Billing Portal session (manage/cancel)
+- `POST /api/billing/webhook/` — Stripe webhook receiver (signature-verified)
+
+---
+
+## 🔐 Auth endpoints
+
+- `POST /api/auth/register/`
+- `POST /api/auth/login/`
+- `POST /api/auth/refresh/`
+- `GET  /api/auth/me/`
+
+## 🏢 Organization endpoints
+
+- `GET/POST /api/orgs/` — list my orgs / create a new org (creator becomes owner)
+- `GET /api/orgs/<slug>/` — org detail (members only)
+- `GET /api/orgs/<slug>/members/` — list members
+- `POST /api/orgs/<slug>/invite/` — invite an existing user by email (owner/admin only)
+
+## 📁 Projects & ✅ Tasks (org-scoped)
+
+- `GET/POST /api/orgs/<slug>/projects/`
+- `GET/PATCH/DELETE /api/orgs/<slug>/projects/<id>/`
+- `GET/POST /api/orgs/<slug>/projects/tasks/`
+- `GET/PATCH/DELETE /api/orgs/<slug>/projects/tasks/<id>/`
+
+Examples:
+
+```http
+GET /api/orgs/acme/projects/?status=active
+GET /api/orgs/acme/projects/?search=client&ordering=-created_at
+GET /api/orgs/acme/projects/tasks/?completed=false
+```
+
+---
+
+## 🖥 Frontend setup
+
+```bash
+cd frontend
+cp .env.example .env   # VITE_API_BASE_URL=http://localhost:8000
+npm install
+npm run dev
+```
+
+Visit `http://localhost:5173`. Pages: register/login → organization picker → project list → project detail (tasks) → billing/upgrade.
+
+> **Note:** the frontend was written by hand against Vite/React conventions but has not been run in this environment (Node.js isn't installed here) — run `npm install && npm run dev` yourself and confirm the flow before relying on it.
+
+---
+
+## 🐳 Docker (Postgres + Django + React + nginx)
+
+```bash
+cp .env.example .env   # fill in real values, especially SECRET_KEY and Stripe keys
+docker compose up --build
+```
+
+- `db` — Postgres 16
+- `backend` — Django via gunicorn on :8000, runs migrations + collectstatic on start
+- `frontend` — React build served by nginx on :80, reverse-proxies `/api/`, `/admin/`, `/static/` to `backend` (same-origin in prod, no CORS needed)
+
+`docker compose config` was used to validate the compose file in this environment; the images themselves have not been built end-to-end here because Docker Desktop's engine wasn't running — build and walk through the app once before deploying.
+
+---
+
+## 🔒 Permissions summary
+
+- Authentication required for all non-auth endpoints
+- Org membership required for any org-scoped endpoint (403 otherwise, including for nonexistent org slugs)
+- Only owner/admin roles can invite members or manage billing
+- Free plan projects are capped (`max_projects`); Pro is unlimited
 
 ---
 
 ## 📊 Status
 
-- Complete backend API
-- Filtering, search, and ordering added
-- Project stats added
-- Nested task data added
-- Automated tests added
-- Ready for frontend integration
+- Multi-tenant organizations with roles
+- Stripe subscription billing (Checkout, Portal, webhooks, plan limits)
+- Org-scoped REST API with full test coverage (22 tests)
+- React frontend covering the full flow
+- Dockerized for Postgres-backed deployment
 
 ---
 

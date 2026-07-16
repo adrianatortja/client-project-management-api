@@ -1,16 +1,23 @@
 from django.db import models
 from django.conf import settings
 
+from orgs.models import Organization
+
 class Project(models.Model):
     STATUS_CHOICES = [
         ('active', 'Active'),
         ('completed', 'Completed'),
     ]
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+    organization = models.ForeignKey(
+        Organization,
         on_delete=models.CASCADE,
         related_name='projects'
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='created_projects'
     )
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)

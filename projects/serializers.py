@@ -21,8 +21,10 @@ class TaskSerializer(serializers.ModelSerializer):
     def validate_project(self, value):
         request = self.context.get('request')
 
-        if value.user != request.user:
-            raise serializers.ValidationError("You can only add tasks to your own projects.")
+        if not value.organization.memberships.filter(user=request.user).exists():
+            raise serializers.ValidationError(
+                "You can only add tasks to projects in your organization."
+            )
 
         return value
 
@@ -49,11 +51,13 @@ class ProjectSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
     def get_total_tasks(self, obj):
-        return obj.tasks.count()
+        annotated = getattr(obj, 'total_tasks_count', None)
+        return annotated if annotated is not None else obj.tasks.count()
 
     def get_completed_tasks(self, obj):
-        return obj.tasks.filter(completed=True).count()
+        annotated = getattr(obj, 'completed_tasks_count', None)
+        return annotated if annotated is not None else obj.tasks.filter(completed=True).count()
 
     def get_pending_tasks(self, obj):
-        return obj.tasks.filter(completed=False).count()
-    
+        annotated = getattr(obj, 'pending_tasks_count', None)
+        return annotated if annotated is not None else obj.tasks.filter(completed=False).count()

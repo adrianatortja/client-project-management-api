@@ -10,12 +10,18 @@ env/
 
 # Database
 db.sqlite3
+db.sqlite3.bak
 
 # Environment variables
 .env
 
 # Django
 *.log
+staticfiles/
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
 
 # IDE
 .vscode/
